@@ -9,3 +9,34 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Coach {
+  id String @id @default(uuid())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email String @unique
+  hash String
+
+  firstName String?
+  lastName String?
+
+  clients Client[]
+
+  @@map("coaches")
+}
+
+model Client {
+  id Int @id @default(autoincrement())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  email String @unique
+  firstName String?
+  lastName String?
+
+  coachId String
+  coach Coach @relation(fields: [coachId], references: [id])
+
+  @@map("clients")
+}
