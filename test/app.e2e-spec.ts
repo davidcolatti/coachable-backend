@@ -4,6 +4,7 @@ import * as pactum from 'pactum';
 import { PrismaService } from '../src/prisma/prisma.service';
 import { AppModule } from '../src/app.module';
 import { AuthDto } from '../src/auth/dto';
+import { EditLoggedInCoachDto } from 'src/coach/dto';
 
 describe('App (e2e)', () => {
   let app: INestApplication;
@@ -95,6 +96,66 @@ describe('App (e2e)', () => {
             // store the access token inside the userAccessToken variable, in the pactum store
             .stores('userAccessToken', 'access_token')
         );
+      });
+    });
+  });
+
+  describe('Coach', () => {
+    describe('Get the logged in coach', () => {
+      it('should get the logged in coach', () => {
+        return pactum
+          .spec()
+          .get('/coach')
+          .withHeaders({
+            Authorization: `Bearer $S{userAccessToken}`,
+          })
+          .expectStatus(200)
+          .stores('coachId', 'id');
+      });
+    });
+
+    describe('Edit the logged in coach', () => {
+      it('should edit the logged in coach', () => {
+        const dto: EditLoggedInCoachDto = {
+          firstName: 'Georgie',
+          lastName: 'Dominique',
+        };
+
+        return pactum
+          .spec()
+          .patch('/coach')
+          .withHeaders({
+            Authorization: `Bearer $S{userAccessToken}`,
+          })
+          .withBody(dto)
+          .expectStatus(200)
+          .expectBodyContains(dto.firstName)
+          .expectBodyContains(dto.lastName);
+      });
+    });
+
+    describe('Get a coach by id', () => {
+      it('should get a coach by id', () => {
+        return pactum
+          .spec()
+          .get('/coach/{id}')
+          .withPathParams('id', '$S{coachId}')
+          .withHeaders({
+            Authorization: `Bearer $S{userAccessToken}`,
+          })
+          .expectStatus(200)
+          .expectBodyContains('$S{coachId}');
+      });
+
+      it('should throw if the id param is incorrect', () => {
+        return pactum
+          .spec()
+          .get('/coach/{id}')
+          .withPathParams('id', 'myfakeid')
+          .withHeaders({
+            Authorization: `Bearer $S{userAccessToken}`,
+          })
+          .expectStatus(404);
       });
     });
   });
